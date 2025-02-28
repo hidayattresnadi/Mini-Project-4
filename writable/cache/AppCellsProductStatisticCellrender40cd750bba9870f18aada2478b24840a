@@ -1,0 +1,209 @@
+a:3:{s:4:"time";i:1740715213;s:3:"ttl";i:3600;s:4:"data";s:6774:"<!-- DEBUG-VIEW START 6 APPPATH\Views\product\product_statistic.php -->
+<!-- DEBUG-VIEW START 5 APPPATH\Views\layouts\admin_layout.php -->
+<!-- DEBUG-VIEW START 4 APPPATH\Views\layouts\main.php -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            max-width: 100%;
+            height: 100vh;
+            background: #343a40;
+            color: white;
+            position: fixed;
+            left: -250px;
+            top: 0;
+            transition: all 0.3s ease;
+            padding: 15px;
+        }
+
+        .sidebar.show {
+            left: 0;
+        }
+
+        /* Responsive sidebar */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60%;
+                left: -60%;
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+        }
+
+        /* Navbar & content shift */
+        .content {
+            transition: margin-left 0.3s ease;
+            margin-left: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content.shifted {
+            margin-left: 250px;
+        }
+
+        @media (max-width: 768px) {
+            .content.shifted {
+                margin-left: 60%;
+            }
+        }
+
+        /* Sticky footer */
+        .footer {
+            background: #343a40;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            margin-top: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <div class="content" id="mainContent">
+        <header>
+            <!-- DEBUG-VIEW START 2 APPPATH\Views\partials\navbar.php -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#" id="toggleSidebar">MyApp</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="/products">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/users/profile">Profile</a></li>
+            </ul>
+            <span class="navbar-text">Welcome, John Doe</span>
+        </div>
+    </div>
+</nav>
+<!-- DEBUG-VIEW ENDED 2 APPPATH\Views\partials\navbar.php -->
+        </header>
+        <!-- Konten utama -->
+        <div class="container mt-4 flex-grow-1">
+            <main>
+                
+<div class="container mt-5">
+    <h3>Product Sales & Inventory Statistics</h3>
+    <canvas id="salesChart"></canvas>
+    <canvas id="inventoryChart"></canvas>
+</div>
+
+<script>
+    function fetchStatistics() {
+        $.ajax({
+            url: "http://localhost:8080/index.php/product-statistics/getStatistics",
+            type: "GET",
+            dataType: "json",
+            success: function(data) {
+                updateSalesChart(data.sales_trends);
+                updateInventoryChart(data.inventory_levels);
+            }
+        });
+    }
+
+    function updateSalesChart(salesData) {
+        let labels = salesData.map(item => item.month);
+        let sales = salesData.map(item => item.sales);
+
+        new Chart(document.getElementById('salesChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Sales Trends',
+                    data: sales,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2
+                }]
+            }
+        });
+    }
+
+    function updateInventoryChart(inventoryData) {
+        let labels = inventoryData.map(item => item.product);
+        let stock = inventoryData.map(item => item.stock);
+
+        new Chart(document.getElementById('inventoryChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Inventory Levels',
+                    data: stock,
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 2
+                }]
+            }
+        });
+    }
+
+    // Fetch data every 1 hour
+    fetchStatistics();
+    setInterval(fetchStatistics, 3600000);
+</script>
+
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <!-- DEBUG-VIEW START 1 APPPATH\Views\partials\sidebar.php -->
+<h5 class="me-3">Admin Menu</h5>
+<ul class="nav flex-column">
+    <li class="nav-item"><a class="nav-link text-white" href="/admin/dashboard">Dashboard</a></li>
+    <li class="nav-item"><a class="nav-link text-white" href="/admin/products">Products</a></li>
+    <li class="nav-item"><a class="nav-link text-white" href="/products/statistics">Statistics</a></li>
+    <li class="nav-item"><a class="nav-link text-white" href="/admin/users">Users</a></li>
+</ul>
+<!-- DEBUG-VIEW ENDED 1 APPPATH\Views\partials\sidebar.php -->
+</div>
+
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer mt-5">
+            <!-- DEBUG-VIEW START 3 APPPATH\Views\partials\footer.php -->
+<!-- Footer -->
+<div class="container">
+    <p>&copy; 2025 MyApp. All rights reserved.</p>
+</div>
+<!-- DEBUG-VIEW ENDED 3 APPPATH\Views\partials\footer.php -->
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById("toggleSidebar").addEventListener("click", function(event) {
+            event.preventDefault();
+            document.getElementById("sidebar").classList.toggle("show");
+            document.getElementById("mainContent").classList.toggle("shifted");
+        });
+    </script>
+
+</body>
+
+</html>
+<!-- DEBUG-VIEW ENDED 4 APPPATH\Views\layouts\main.php -->
+
+<!-- DEBUG-VIEW ENDED 5 APPPATH\Views\layouts\admin_layout.php -->
+
+<!-- DEBUG-VIEW ENDED 6 APPPATH\Views\product\product_statistic.php -->
+";}

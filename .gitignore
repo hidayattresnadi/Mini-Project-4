@@ -1,0 +1,19 @@
+.env
+.vscode
+.vs/
+vendor/
+
+# IDE & System Files
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+
+# CodeIgniter 4 Specific
+tests/_support/_ci_phpunit_test_temp/
+tests/_ci_phpunit_test/
+phpunit.xml
+
