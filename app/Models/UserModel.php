@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Libraries\DataParamsUser;
 use CodeIgniter\Model;
 
 class UserModel extends Model
@@ -98,5 +99,59 @@ class UserModel extends Model
     public function updateLastLogin($userId)
     {
         return $this->update($userId, ['last_login' => date('Y-m-d H:i:s')]);
+    }
+
+
+    public function getFilteredUsers(DataParamsUser $params)
+    {
+        if (!empty($params->search)) {
+            $this->groupStart()
+                ->like('username', $params->search)
+                ->orLike('email', $params->search)
+                ->orlike("full_name", $params->search)
+                ->orlike("role", $params->search)
+                ->orlike("status", $params->search)
+                ->groupEnd();
+        }
+
+        // Apply filter status
+        if (!empty($params->status)) {
+            $this->where('status', $params->status);
+        }
+
+        // Apply filter role
+
+        if (!empty($params->role)) {
+            $this->where('role', $params->role);
+        }
+
+
+        // Apply sort
+        $allowedSortColumns = ['last_login', 'email', 'username'];
+        $sort = in_array($params->sort, $allowedSortColumns) ? $params->sort : 'id';
+        $order = ($params->order === 'desc') ? 'desc' : 'asc';
+
+        $this->orderBy($sort, $order);
+
+        $result = [
+            'users' => $this->paginate($params->perPage, 'users', $params->page_users),
+            'pager' => $this->pager,
+            'total' => $this->countAllResults(false)
+        ];
+        return $result;
+    }
+
+    public function getAllStatuses()
+    {
+        $statuses = $this->select('status')->distinct()->findAll();
+        $statuses = array_column($statuses, 'status');
+        return $statuses;
+    }
+
+    public function getAllRoles()
+    {
+        $roles = $this->select('role')->distinct()->findAll();
+        $roles = array_column($roles, 'role');
+        return $roles;
     }
 }

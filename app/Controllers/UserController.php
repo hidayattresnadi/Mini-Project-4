@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Entities\User;
+use App\Libraries\DataParamsUser;
 use App\Models\UserModel;
 
 class UserController extends BaseController
@@ -40,7 +41,27 @@ class UserController extends BaseController
 
     public function index()
     {
-        $data['users'] = $this->userModel->findAll();
+        $params = new DataParamsUser([
+            'search' => $this->request->getGet('search'),
+            'role' => $this->request->getGet('role'),
+            'status' => $this->request->getGet('status'),
+            'sort' => $this->request->getGet('sort'),
+            'order' => $this->request->getGet('order'),
+            'page_users' => $this->request->getGet('page_users'),
+            'perPage' => $this->request->getGet('perPage')
+        ]);
+
+        $result = $this->userModel->getFilteredUsers($params);
+
+        $data = [
+            'users' => $result['users'],
+            'pager' => $result['pager'],
+            'total' => $result['total'],
+            'params' => $params,
+            'statuses' => $this->userModel->getAllStatuses(),
+            'roles' => $this->userModel->getAllRoles(),
+            'baseUrl' => base_url('admin/users')
+        ];
         $this->renderer->setData($data);
 
         // Warming cache -> Memperbarui cache ketika hampir kadaluarsa

@@ -17,33 +17,48 @@
             <h4 class="mb-0">Edit Product</h4>
         </div>
         <div class="card-body">
-            <form method="post" action="<?= site_url('admin/products/' . $product->id) ?>">
+            <form id="formData" method="post" action="<?= site_url('admin/products/' . $product->id) ?>">
                 <?= csrf_field() ?>
                 <input type="hidden" name="_method" value="PUT">
 
                 <div class="mb-3">
                     <label for="name" class="form-label">Product Name</label>
-                    <input type="text" id="name" name="name" class="form-control" placeholder="Enter Product Name" value="<?= esc($product->name) ?>">
+                    <input type="text" id="name" name="name" class="form-control" placeholder="Enter Product Name" value="<?= esc($product->name) ?>"
+                        data-pristine-required
+                        data-pristine-required-message="Name required"
+                        data-pristine-minlength="3"
+                        data-pristine-minlength-message="Name minimal 3 characters">
                 </div>
 
                 <div class="mb-3">
                     <label for="description" class="form-label">Description</label>
-                    <textarea name="description" class="form-control" id="description" rows="5" placeholder="Enter description"><?= esc($product->description ?? '') ?></textarea>
+                    <textarea name="description" class="form-control" id="description" rows="5" placeholder="Enter description"
+                        data-pristine-required
+                        data-pristine-required-message="Description Required"
+                        data-pristine-maxlength="255"
+                        data-pristine-maxlength-message="Description Cannot exceed 255 characters">
+                        <?= esc($product->description ?? '') ?></textarea>
                 </div>
 
                 <div class="mb-3">
                     <label for="price" class="form-label">Price</label>
-                    <input type="number" id="price" name="price" class="form-control" placeholder="Enter Price" step="0.01" value="<?= esc($product->price) ?>">
+                    <input type="number" id="price" name="price" class="form-control" placeholder="Enter Price" step="0.01" value="<?= esc($product->price) ?>"
+                        data-pristine-required
+                        data-pristine-required-message="Price required">
                 </div>
 
                 <div class="mb-3">
                     <label for="stock" class="form-label">Stock</label>
-                    <input type="number" id="stock" name="stock" class="form-control" placeholder="Masukkan stok" value="<?= esc($product->stock) ?>">
+                    <input type="number" id="stock" name="stock" class="form-control" placeholder="Masukkan stok" value="<?= esc($product->stock) ?>"
+                        data-pristine-required
+                        data-pristine-required-message="Stock required">
                 </div>
 
                 <div class="mb-3">
                     <label for="category_id" class="form-label">Category</label>
-                    <select id="category_id" name="category_id" class="form-select">
+                    <select id="category_id" name="category_id" class="form-select"
+                        data-pristine-required
+                        data-pristine-required-message="Please select category">
                         <option value="">-- Select Category --</option>
                         <?php foreach ($categories as $category): ?>
                             <option <?= ($product->category_id == $category->id) ? 'selected' : '' ?> value="<?= $category->id ?>"><?= $category->name ?></option>
@@ -53,7 +68,9 @@
 
                 <div class="mb-3">
                     <label for="status" class="form-label">Status</label>
-                    <select id="status" name="status" class="form-select">
+                    <select id="status" name="status" class="form-select"
+                        data-pristine-required
+                        data-pristine-required-message="Please select product status">
                         <option value="">-- Select Status --</option>
                         <option value="active" <?= ($product->status == "active") ? 'selected' : '' ?>>Active</option>
                         <option value="inactive" <?= ($product->status == "inactive") ? 'selected' : '' ?>>Inactive</option>

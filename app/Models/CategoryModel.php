@@ -42,4 +42,10 @@ class CategoryModel extends Model
     protected $afterFind      = [];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
+
+    public function getAllCategories()
+    {
+        $categories = $this->select('name')->distinct()->findAll();
+        return array_column($categories, 'name');
+    }
 }

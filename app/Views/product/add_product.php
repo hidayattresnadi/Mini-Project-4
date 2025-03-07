@@ -17,31 +17,45 @@
             <h4 class="mb-0">Add Product</h4>
         </div>
         <div class="card-body">
-            <form method="post" action="<?= site_url('admin/products/create') ?>">
+            <form id="formData" method="post" action="<?= site_url('admin/products/create') ?>">
 
                 <div class="mb-3">
                     <label for="name" class="form-label">Product Name</label>
-                    <input type="text" id="name" name="name" class="form-control" placeholder="Enter Product Name">
+                    <input type="text" id="name" name="name" class="form-control" placeholder="Enter Product Name"
+                        data-pristine-required
+                        data-pristine-required-message="Name required"
+                        data-pristine-minlength="3"
+                        data-pristine-minlength-message="Name minimal 3 characters">
                 </div>
 
                 <div class="mb-3">
                     <label for="description" class="form-label">Description</label>
-                    <textarea name="description" class="form-control" id="description" rows="5" placeholder="Enter description"></textarea>
+                    <textarea name="description" class="form-control" id="description" rows="5" placeholder="Enter description"
+                        data-pristine-required
+                        data-pristine-required-message="Description Required"
+                        data-pristine-maxlength="255"
+                        data-pristine-maxlength-message="Description Cannot exceed 255 characters"></textarea>
                 </div>
 
                 <div class="mb-3">
                     <label for="price" class="form-label">Price</label>
-                    <input type="number" id="price" name="price" class="form-control" placeholder="Enter Price" step="0.01">
+                    <input type="number" id="price" name="price" class="form-control" placeholder="Enter Price" step="0.01"
+                        data-pristine-required
+                        data-pristine-required-message="Price required">
                 </div>
 
                 <div class="mb-3">
                     <label for="stock" class="form-label">Stock</label>
-                    <input type="number" id="stock" name="stock" class="form-control" placeholder="Masukkan stok">
+                    <input type="number" id="stock" name="stock" class="form-control" placeholder="Masukkan stok"
+                        data-pristine-required
+                        data-pristine-required-message="Stock required">
                 </div>
 
                 <div class="mb-3">
                     <label for="category_id" class="form-label">Category</label>
-                    <select id="category_id" name="category_id" class="form-select">
+                    <select id="category_id" name="category_id" class="form-select"
+                        data-pristine-required
+                        data-pristine-required-message="Please select category">
                         <option value="">-- Select Category --</option>
                         <?php foreach ($categories as $category): ?>
                             <option value="<?= $category->id ?>"><?= $category->name ?></option>
@@ -51,7 +65,9 @@
 
                 <div class="mb-3">
                     <label for="status" class="form-label">Status</label>
-                    <select id="status" name="status" class="form-select">
+                    <select id="status" name="status" class="form-select"
+                        data-pristine-required
+                        data-pristine-required-message="Please select product status">
                         <option value="">-- Select Status --</option>
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>

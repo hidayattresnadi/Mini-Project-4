@@ -3,5 +3,6 @@
 <?= $this->section('content') ?>
 
 <?= $content ?? '' ?>
+<?= $pager->links('products', 'custom_pager') ?>
 
 <?= $this->endSection() ?>

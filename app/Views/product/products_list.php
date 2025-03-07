@@ -3,23 +3,57 @@
 <?= $this->section('content') ?>
 <div class="container mt-4">
     <h1 class="mb-4">Product Lists</h1>
-    <form method="get" action="<?= site_url('admin/products') ?>" class="row g-2">
-        <div class="col-md-5">
-            <input type="text" id="search" name="search" class="form-control"
-                placeholder="Search products..." value="<?= esc($_GET['search'] ?? '') ?>">
+    <form method="get" action="<?= site_url('admin/products') ?>" class="form-inline">
+        <div class="row g-3 mb-4">
+            <!-- Search Input -->
+            <div class="col-md-5">
+                <label class="form-label mb-1">Search Product</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" name="search" value="<?= $params->search ?>" placeholder="Search here...">
+                    <button class="btn btn-outline-primary" type="submit">Search</button>
+                </div>
+            </div>
+
+            <!-- filter Categories -->
+            <div class="col-md-2 ms-md-5">
+                <label class="form-label mb-1">Filter by Categories</label>
+                <select name="category" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    <?php foreach ($categories as $category): ?>
+                        <option value="<?= $category ?>" <?= ($params->category == $category) ? 'selected' : '' ?>><?= ucfirst($category) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- filter Price Range -->
+            <div class="col-md-2">
+                <label class="form-label mb-1">Filter by Price Range</label>
+                <select name="price" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Prices Range</option>
+                    <?php
+                    foreach ($priceRanges as $label => $range):
+                        $value = $range[0] . '-' . ($range[1] ?? 'above'); // Format value
+                    ?>
+                        <option value="<?= $value ?>" <?= ($params->price == $value) ? 'selected' : '' ?>>
+                            <?= $label ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Results per Page -->
+            <div class="col-md-2">
+                <label class="form-label mb-1">Results per Page</label>
+                <select name="perPage" class="form-control" onchange="this.form.submit()">
+                    <option value="2" <?= ($params->perPage == 2) ? 'selected' : '' ?>>2 results per page</option>
+                    <option value="10" <?= ($params->perPage == 10) ? 'selected' : '' ?>>10 results per page</option>
+                    <option value="25" <?= ($params->perPage == 25) ? 'selected' : '' ?>>25 results per page</option>
+                    <option value="50" <?= ($params->perPage == 50) ? 'selected' : '' ?>>50 results per page</option>
+                </select>
+            </div>
         </div>
-        <div class="col-md-4">
-            <select name="filter" class="form-select">
-                <option value="">All Categories</option>
-                <option value="Makanan" <?= (isset($_GET['filter']) && $_GET['filter'] == 'Makanan' ? 'selected' : '') ?>>Makanan</option>
-                <option value="Mainan" <?= (isset($_GET['filter']) && $_GET['filter'] == 'Mainan' ? 'selected' : '') ?>>Mainan</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-primary w-100">
-                <i class="bi bi-search"></i> Search
-            </button>
-        </div>
+        <input type="hidden" name="sort" value="<?= $params->sort; ?>">
+        <input type="hidden" name="order" value="<?= $params->order; ?>">
     </form>
 </div>
 
@@ -35,10 +69,12 @@
         <table class="table table-striped table-bordered">
             <thead class="table-dark">
                 <tr>
-                    <th>Name</th>
-                    <th>Price</th>
+                    <th><?= view_cell('SortTableHeaderCell',  ['params' => $params, 'baseUrl' => $baseUrl, 'tableField' => 'name', 'tableTitleHeader' => 'Name']) ?></th>
+                    <th><?= view_cell('SortTableHeaderCell',  ['params' => $params, 'baseUrl' => $baseUrl, 'tableField' => 'price', 'tableTitleHeader' => 'Price']) ?></th>
                     <th>Stock</th>
                     <th>Category</th>
+                    <th>Images</th>
+                    <th><?= view_cell('SortTableHeaderCell',  ['params' => $params, 'baseUrl' => $baseUrl, 'tableField' => 'created_at', 'tableTitleHeader' => 'Date']) ?></th>
                     <th>Detail</th>
                     <th>Edit</th>
                     <th>Hapus</th>
@@ -51,6 +87,26 @@
                         <td><?= $product->getFormattedPrice() ?></td>
                         <td><?= $product->stock ?></td>
                         <td><?= $product->category ?></td>
+                        <td style="width: 25%;">
+                            <div id="carousel<?= $product->id ?>" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner">
+                                    <?php foreach ($product->images as $index => $image) : ?>
+                                        <div class="carousel-item <?= $index === 0 ? 'active' : '' ?> ">
+                                            <img src="<?= base_url($image) ?>" class="w-100" alt="Product Image">
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <button class="carousel-control-prev" type="button" data-bs-target="#carousel<?= $product->id ?>" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#carousel<?= $product->id ?>" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                </button>
+                            </div>
+
+                        </td>
+                        <td><?= $product->created_at ?></td>
                         <td>
                             <a href="<?= route_to('product_details', $product->id) ?>" class="btn btn-primary btn-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
@@ -83,4 +139,5 @@
         </table>
     </div>
 </div>
+<?= $pager->links('products', 'custom_pager') ?>
 <?= $this->endSection() ?>

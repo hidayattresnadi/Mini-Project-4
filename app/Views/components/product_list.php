@@ -1,25 +1,23 @@
 <div class="container mt-4">
     <h2 class="mb-4">Product List</h2>
     <form method="get" action="products" class="row g-2">
+        {inputSearch|noescape}
+        {filterCategory|noescape}
+        {selectPages|noescape}
+        {filterPricesRange|noescape}
         <div class="col-md-5">
-            <input type="text" id="search" name="search" class="form-control"
-                placeholder="Search products..." value="{search}">
+            <label class="text-muted mt-2 mb-2">Sort Options</label>
+            <div class="d-flex gap-2">
+                {thName|noescape}
+                {thPrice|noescape}
+                {thCreatedAt|noescape}
+            </div>
         </div>
-        <div class="col-md-4">
-            <select name="filter" class="form-select">
-                <option value="">All Status</option>
-                <option value="active" {selected_active}>Active</option>
-                <option value="inactive" {selected_inactive}>Inactive</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-primary w-100">
-                <i class="bi bi-search"></i> Search
-            </button>
-        </div>
+
+
     </form>
 
-    <div class="row mt-5">
+    <div class="row mt-4">
         {products}
         <div class="col-md-4">
             <div class="card mb-4">

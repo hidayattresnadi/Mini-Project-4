@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Entities\Product;
+use App\Libraries\DataParams;
 use App\Models\CategoryModel;
 use App\Models\ProductModel;
 
@@ -21,8 +22,30 @@ class ProductController extends BaseController
     public function index(): string
     {
         $parser = \Config\Services::parser();
-        $cache = \Config\Services::cache();
-        $data['products'] = $this->productModel->findListActiveProducts();
+        // $cache = \Config\Services::cache();
+
+        $params = new DataParams([
+            'search' => $this->request->getGet('search'),
+            'category' => $this->request->getGet('category'),
+            'price' => $this->request->getGet('price'),
+            'sort' => $this->request->getGet('sort'),
+            'order' => $this->request->getGet('order'),
+            'page_products' => $this->request->getGet('page_products'),
+            'perPage' => $this->request->getGet('perPage')
+        ]);
+
+        $isNotAdmin = false;
+        $result = $this->productModel->getFilteredProducts($params, $isNotAdmin);
+
+        $data = [
+            'products' => $result['products'],
+            'total' => $result['total'],
+            'priceRanges' => $this->productModel->getAllPrices(),
+            'categories' => $this->categoryModel->getAllCategories(),
+            'baseUrl' => base_url('/products'),
+            'inputSearch' => view_cell('SearchCell', ['params' => $params, 'label' => 'Search Product']),
+        ];
+
         $data['products'] = array_map(function ($product) {
             $product->formattedPrice = $product->getFormattedPrice();
             $product->isNewSpan = view_cell('IsNewProductCell', ['isNew' => (bool) $product->isNew()]);
@@ -33,20 +56,68 @@ class ProductController extends BaseController
             return $product;
         }, $data['products']);
 
-        $search = $this->request->getGet('search') ?? '';
-        $filter = $this->request->getGet('filter') ?? '';
+        $data['filterCategory'] = view_cell('SelectOptionsCell', [
+            'params' => $params,
+            'label' => 'Filter by Categories',
+            'paramsName' => 'category',
+            'datas' => $data['categories'],
+            'accessField' => [$params->category],
+            'optionsSelectAll' => 'All Categories'
+        ]);
 
-        $cacheKey = "products_search_{$search}_filter_{$filter}";
+        $data['selectPages'] = view_cell('SelectOptionsCell', [
+            'params' => $params,
+            'label' => 'Results per Page',
+            'paramsName' => 'perPage',
+            'datas' => [2, 10, 15, 25],
+            'accessField' => [$params->perPage],
+            'optionsSelectAll' => '',
+            'optionsValueNull' => false,
+            'style' => "col-md-2"
+        ]);
 
-        $data['search'] = esc($search);
-        $data['selected_active'] = ($filter === 'active') ? 'selected' : '';
-        $data['selected_inactive'] = ($filter === 'inactive') ? 'selected' : '';
+        $data['filterPricesRange'] = view_cell('FilterPriceRangeCell', [
+            'priceRanges' => $data['priceRanges'],
+            'params' => $params
+        ]);
 
-        if ($cachedData = $cache->get($cacheKey)) {
-            return view('product/index', $cachedData);
-        }
+        $data['thName'] = view_cell('SortTableHeaderCell',  [
+            'params' => $params,
+            'baseUrl' => $data['baseUrl'],
+            'tableField' => 'name',
+            'tableTitleHeader' => 'Name',
+            'style' => "btn btn-primary d-flex align-items-center gap-1"
+        ]);
+        $data['thPrice'] =  view_cell('SortTableHeaderCell',  [
+            'params' => $params,
+            'baseUrl' => $data['baseUrl'],
+            'tableField' => 'price',
+            'tableTitleHeader' => 'Price',
+            'style' => "btn btn-primary d-flex align-items-center gap-1"
+        ]);
+        $data['thCreatedAt'] = view_cell('SortTableHeaderCell',  [
+            'params' => $params,
+            'baseUrl' => $data['baseUrl'],
+            'tableField' => 'created_at',
+            'tableTitleHeader' => 'Date',
+            'style' => "btn btn-primary d-flex align-items-center gap-1"
+        ]);
+        // $search = $this->request->getGet('search') ?? '';
+        // $filter = $this->request->getGet('filter') ?? '';
+
+        // $cacheKey = "products_search_{$search}_filter_{$filter}";
+
+        // $data['search'] = esc($search);
+        // $data['selected_active'] = ($filter === 'active') ? 'selected' : '';
+        // $data['selected_inactive'] = ($filter === 'inactive') ? 'selected' : '';
+
+        // if ($cachedData = $cache->get($cacheKey)) {
+        //     return view('product/index', $cachedData);
+        // }
 
         $data['content'] = $parser->setData($data)->render('components/product_list');
+        $data['pager'] = $result['pager'];
+        $data['params'] = $params;
         $this->renderer->setData($data);
 
         // $cache->save($cacheKey, $data, 3600);
@@ -82,9 +153,32 @@ class ProductController extends BaseController
 
     public function getAllProducts()
     {
-        // $search = $this->request->getGet('search') ?? '';
-        // $filter = $this->request->getGet('filter') ?? '';
-        $data['products'] = $this->productModel->withCategory()->findAll();
+        $params = new DataParams([
+            'search' => $this->request->getGet('search'),
+            'category' => $this->request->getGet('category'),
+            'price' => $this->request->getGet('price'),
+            'sort' => $this->request->getGet('sort'),
+            'order' => $this->request->getGet('order'),
+            'page_products' => $this->request->getGet('page_products'),
+            'perPage' => $this->request->getGet('perPage')
+        ]);
+
+        $isAdmin = true;
+        $result = $this->productModel->getFilteredProducts($params, $isAdmin);
+
+        $data = [
+            'products' => $result['products'],
+            'pager' => $result['pager'],
+            'total' => $result['total'],
+            'params' => $params,
+            'priceRanges' => $this->productModel->getAllPrices(),
+            'categories' => $this->categoryModel->getAllCategories(),
+            'baseUrl' => base_url('admin/products')
+        ];
+
+        foreach ($data['products'] as $product) {
+            $product->images = $product->images ? explode(',', $product->images) : [];
+        }
         return view('product/products_list', $data);
     }
 

@@ -9,6 +9,32 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="<?= base_url('assets/js/pristine.js') ?>"></script>
+    <script>
+        let pristine;
+        window.onload = function() {
+            let form = document.getElementById("formData");
+
+            var pristine = new Pristine(form, {
+                classTo: 'mb-3',
+                errorClass: 'is-invalid',
+                successClass: 'is-valid',
+                errorTextParent: 'mb-3',
+                errorTextTag: 'div',
+                errorTextClass: 'text-danger'
+            });
+
+            var nameValidation = document.getElementById("code");
+
+            form.addEventListener('submit', function(e) {
+                var valid = pristine.validate();
+                if (!valid) {
+                    e.preventDefault();
+                }
+            });
+
+        };
+    </script>
     <style>
         /* Sidebar */
         .sidebar {
@@ -66,6 +92,14 @@
             text-align: center;
             padding: 10px;
             margin-top: auto;
+        }
+
+        .carousel-item img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+
+            display: block;
         }
     </style>
 </head>

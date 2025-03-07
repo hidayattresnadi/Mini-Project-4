@@ -3,7 +3,63 @@
 <?= $this->section('content') ?>
 <div class="container mt-4">
     <h1 class="mb-4">List Users</h1>
+    <form method="get" action="<?= site_url('admin/users') ?>" class="form-inline">
+        <div class="row g-3 mb-4">
+            <!-- Search Input -->
+            <div class="col-md-5">
+                <label class="form-label mb-1">Search User</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" name="search" value="<?= $params->search ?>" placeholder="Search here...">
+                    <button class="btn btn-outline-primary" type="submit">Search</button>
+                </div>
+            </div>
 
+            <!-- filter Roles -->
+            <div class="col-md-2 ms-md-5">
+                <label class="form-label mb-1">Filter by Roles</label>
+                <select name="role" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Roles</option>
+                    <?php foreach ($roles as $role): ?>
+                        <option value="<?= $role ?>" <?= ($params->role == $role) ? 'selected' : '' ?>><?= ucfirst($role) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- filter Status -->
+            <div class="col-md-2">
+                <label class="form-label mb-1">Filter by Status</label>
+                <select name="status" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <?php foreach ($statuses as $status): ?>
+                        <option value="<?= $status ?>" <?= ($params->status == $status) ? 'selected' : '' ?>><?= ucfirst($status) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+
+            <!-- Results per Page -->
+            <div class="col-md-2">
+                <label class="form-label mb-1">Results per Page</label>
+                <select name="perPage" class="form-control" onchange="this.form.submit()">
+                    <option value="2" <?= ($params->perPage == 2) ? 'selected' : '' ?>>2 results per page</option>
+                    <option value="10" <?= ($params->perPage == 10) ? 'selected' : '' ?>>10 results per page</option>
+                    <option value="25" <?= ($params->perPage == 25) ? 'selected' : '' ?>>25 results per page</option>
+                    <option value="50" <?= ($params->perPage == 50) ? 'selected' : '' ?>>50 results per page</option>
+                </select>
+            </div>
+        </div>
+        <input type="hidden" name="sort" value="<?= $params->sort; ?>">
+        <input type="hidden" name="order" value="<?= $params->order; ?>">
+    </form>
+</div>
+
+
+
+
+
+
+
+<div class="container mt-4">
     <a href="<?= site_url('admin/users/create') ?>" class="btn btn-success mb-3">Add User</a>
 
     <div class="table-responsive">
@@ -11,9 +67,11 @@
             <thead class="table-dark">
                 <tr>
                     <th>Nama</th>
-                    <th>Username</th>
+                    <th><?= view_cell('SortTableHeaderUserCell',  ['params' => $params, 'baseUrl' => $baseUrl, 'tableField' => 'username', 'tableTitleHeader' => 'Username']) ?></th>
                     <th>Role</th>
                     <th>Status</th>
+                    <th><?= view_cell('SortTableHeaderUserCell',  ['params' => $params, 'baseUrl' => $baseUrl, 'tableField' => 'email', 'tableTitleHeader' => 'Email']) ?></th>
+                    <th><?= view_cell('SortTableHeaderUserCell',  ['params' => $params, 'baseUrl' => $baseUrl, 'tableField' => 'last_login', 'tableTitleHeader' => 'Last login']) ?></th>
                     <th>Detail</th>
                     <th>Edit</th>
                     <th>Hapus</th>
@@ -26,6 +84,8 @@
                         <td><?= htmlspecialchars($user->username) ?></td>
                         <td><?= htmlspecialchars($user->role) ?></td>
                         <td><?= htmlspecialchars($user->status) ?></td>
+                        <td><?= htmlspecialchars($user->email) ?></td>
+                        <td><?= htmlspecialchars($user->last_login) ?></td>
                         <td>
                             <a href="<?= site_url('admin/users/profile/' . $user->id) ?>" class="btn btn-primary btn-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
@@ -58,4 +118,5 @@
         </table>
     </div>
 </div>
+<?= $pager->links('users', 'custom_pager') ?>
 <?= $this->endSection() ?>

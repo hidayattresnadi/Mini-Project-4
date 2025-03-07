@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Libraries\DataParams;
 use CodeIgniter\Model;
 
 class ProductModel extends Model
@@ -123,5 +124,83 @@ class ProductModel extends Model
         ')->join('categories', 'categories.id = products.category_id')
             ->join('product_images', 'product_images.product_id = products.id', 'left')
             ->groupBy('products.id, categories.name');
+    }
+
+
+    public function getFilteredProducts(DataParams $params, bool $isAdmin)
+    {
+        $query = $this->withCategoryAndImages();
+        if (!empty($params->search)) {
+            if ($isAdmin) {
+                $query->groupStart()
+                    ->like('products.name', $params->search)
+                    ->orLike('products.description', $params->search)
+                    ->orlike("CAST(products.price AS CHAR)", $params->search)
+                    ->orlike("CAST(products.stock AS CHAR)", $params->search)
+                    ->orlike("products.status", $params->search)
+                    ->orlike("categories.name", $params->search)
+                    ->groupEnd();
+            } else {
+                $query->groupStart()
+                    ->like('products.name', $params->search)
+                    ->orlike("categories.name", $params->search)
+                    ->groupEnd();
+            }
+        }
+
+        // Apply filter category
+
+        if (!empty($params->category)) {
+            $query->where('categories.name', $params->category);
+        }
+
+        // Apply filter price range
+
+        if (!empty($params->price)) {
+            // list => menyimpan elemen array ke variabel terpisah
+            list($min, $max) = explode('-', $params->price);
+
+            if ($max === 'above') {
+                $query->where('price >=', $min); // Produk dengan harga >= min
+            } else {
+                $query->where('price >=', $min)->where('price <=', $max); // Produk dalam range harga
+            }
+        }
+
+
+        // Apply sort
+        $allowedSortColumns = ['price', 'name', 'created_at'];
+        $sort = in_array($params->sort, $allowedSortColumns) ? $params->sort : 'id';
+        $order = ($params->order === 'desc') ? 'desc' : 'asc';
+
+        $this->orderBy($sort, $order);
+
+        $result = [
+            'products' => $this->paginate($params->perPage, 'products', $params->page_products),
+            'pager' => $this->pager,
+            'total' => $this->countAllResults(false)
+        ];
+        return $result;
+    }
+
+    public function getAllPrices()
+    {
+        $ranges = [];
+        $prices = $this->select('price')->distinct()->findAll();
+        $prices = array_column($prices, 'price');
+
+        $min = min($prices);
+        $max = max($prices);
+
+        // range kenaikan harga
+
+        $step = 20000;
+
+        for ($i = $min; $i < $max; $i += $step) {
+            $upper = $i + $step;
+            $ranges["$i - $upper"] = [$i, $upper];
+        }
+        $ranges["Above $max"] = [$max, null];
+        return $ranges;
     }
 }
