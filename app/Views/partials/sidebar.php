@@ -7,6 +7,7 @@
         <li class="nav-item"><a class="nav-link text-white" href="<?= route_to('customers') ?>">Customers</a></li>
         <li class="nav-item"><a class="nav-link text-white" href="<?= route_to('user_dashboard') ?>">Customer Dashboard</a></li>
         <li class="nav-item"><a class="nav-link text-white" href="<?= route_to('users') ?>">Users</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="<?= route_to('roles') ?>">Roles</a></li>
     <?php endif; ?>
 
 </ul>

@@ -28,6 +28,9 @@ $routes->group('admin/roles', ['filter' => 'role:administrator'], function ($rou
     $routes->get('/', 'RoleController::showRoles', ['as' => 'roles']);
     $routes->get('create', 'RoleController::create');
     $routes->post('create', 'RoleController::store');
+    $routes->delete('delete/(:num)', 'RoleController::delete/$1');
+    $routes->get('edit/(:num)', 'RoleController::edit/$1');
+    $routes->put('update/(:num)', 'RoleController::update/$1');
 });
 
 $routes->group('admin/customers', ['filter' => 'role:administrator'], function ($routes) {

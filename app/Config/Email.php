@@ -7,7 +7,7 @@ use CodeIgniter\Config\BaseConfig;
 class Email extends BaseConfig
 {
     public string $fromEmail  = '';
-    public string $fromName   = 'Online Food App';
+    public string $fromName   = 'Academic Management System';
     public string $recipients = '';
 
     /**

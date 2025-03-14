@@ -218,7 +218,7 @@ class ProductController extends BaseController
             }
         }
 
-        return redirect()->to('admin/products')->with('success', 'Products added successfully');
+        return redirect()->to('admin/products')->with('message', 'Products added successfully');
     }
 
     public function edit($id): string
@@ -237,7 +237,7 @@ class ProductController extends BaseController
         $product->fill($data);
 
         if ($this->productModel->save($product)) {
-            session()->setFlashdata('success', 'User berhasil diupdate');
+            session()->setFlashdata('message', 'Product berhasil diupdate');
             // delete cache at folder writable folder cache
 
             $cachePath = WRITEPATH . 'cache/';
@@ -271,6 +271,6 @@ class ProductController extends BaseController
                 unlink($file);
             }
         }
-        return redirect()->to('admin/products')->with('success', 'Products deleted successfully');
+        return redirect()->to('admin/products')->with('message', 'Products deleted successfully');
     }
 }

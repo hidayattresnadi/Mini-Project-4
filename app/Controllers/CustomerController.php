@@ -127,7 +127,7 @@ class CustomerController extends BaseController
         $cacheKey = 'view__index.php_admin_users';
         cache()->delete($cacheKey);
 
-        return redirect()->to(route_to('customers'))->with('success', 'Users added successfully');
+        return redirect()->to(route_to('customers'))->with('message', 'Users added successfully');
     }
 
     public function updateUserForm($id): string
@@ -159,14 +159,13 @@ class CustomerController extends BaseController
         $user->fill($data);
 
         if ($this->customerModel->save($user)) {
-            session()->setFlashdata('success', 'User berhasil diupdate');
             // delete cache at folder writable folder cache
 
             // clear cache
             $cacheKey = 'view__index.php_admin_users';
             cache()->delete($cacheKey);
 
-            return redirect()->to('admin/customers')->with('success', 'Customers updated successfully');
+            return redirect()->to('admin/customers')->with('message', 'Customers updated successfully');
         }
 
         // echo $this->customerModel->errors();
@@ -184,6 +183,6 @@ class CustomerController extends BaseController
         $cacheKey = 'view__index.php_admin_users';
         cache()->delete($cacheKey);
 
-        return redirect()->to('admin/customers')->with('success', 'Customers deleted successfully');
+        return redirect()->to('admin/customers')->with('message', 'Customers deleted successfully');
     }
 }
