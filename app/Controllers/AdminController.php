@@ -3,19 +3,19 @@
 namespace App\Controllers;
 
 use App\Models\ProductModel;
-use App\Models\UserModel;
+use App\Models\CustomerModel;
 
 class AdminController extends BaseController
 {
     protected $renderer;
     private ProductModel $productModel;
-    private UserModel $userModel;
+    private CustomerModel $customerModel;
 
     public function __construct()
     {
         $this->renderer = service('renderer');
         $this->productModel = new ProductModel();
-        $this->userModel = new UserModel();
+        $this->customerModel = new CustomerModel();
     }
     public function showDashboard(): string
     {
@@ -37,9 +37,9 @@ class AdminController extends BaseController
         $parser = \Config\Services::parser();
         $data = [
             'title' => 'User Overview',
-            'activeUsers' => number_format($this->userModel->findActiveUsers()),
-            'totalUsers' => number_format($this->userModel->getTotalUsers()),
-            'newUsers' => number_format($this->userModel->getNewUsersThisMonth()),
+            'activeUsers' => number_format($this->customerModel->findActiveUsers()),
+            'totalUsers' => number_format($this->customerModel->getTotalUsers()),
+            'newUsers' => number_format($this->customerModel->getNewUsersThisMonth()),
         ];
         $data['content'] = $parser->setData($data)->render('components/admin_user_dashboard');
         $this->renderer->setData($data);

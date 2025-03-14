@@ -197,6 +197,8 @@ class ProductController extends BaseController
     public function create()
     {
         $product = new Product($this->request->getPost());
+        $product->is_new = $this->request->getPost('is_new') ?? false;
+        $product->is_sale = $this->request->getPost('is_sale') ?? false;
 
         if (! $this->productModel->save($product)) {
             print_r($this->productModel->errors());

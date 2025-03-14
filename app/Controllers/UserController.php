@@ -2,181 +2,141 @@
 
 namespace App\Controllers;
 
-use App\Entities\User;
-use App\Libraries\DataParamsUser;
-use App\Models\UserModel;
+use App\Controllers\BaseController;
+use Myth\Auth\Models\UserModel;
+use Myth\Auth\Models\GroupModel;
 
 class UserController extends BaseController
 {
-    protected $renderer;
-    private UserModel $userModel;
+    protected $helpers = ['auth'];
+    protected $userModel;
+    protected $groupModel;
+    protected $db;
+    protected $config;
 
     public function __construct()
     {
-        $this->renderer = service('renderer');
         $this->userModel = new UserModel();
-    }
-    public function showProfile(): string
-    {
-        $parser = \Config\Services::parser();
-        $userProfile = array(
-            "name" => "John Doe",
-            "email" => "johndoe@example.com",
-            "birthdate" => date("d M Y", strtotime("1990-05-15")),
-            "account_status" => "Active",
-        );
+        $this->groupModel = new GroupModel();
+        $this->db = \Config\Database::connect();
+        $this->config = config('Auth');
 
-        $data = [
-            'user_information' => view_cell('ProfileCell', ['userData' => $userProfile], 300),
-            // 'activity_history' => array(
-            //     array("date" => date("d M Y H:i", strtotime("-2 days")), "action" => "Logged in"),
-            //     array("date" => date("d M Y H:i", strtotime("-5 days")), "action" => "Updated profile"),
-            //     array("date" => date("d M Y H:i", strtotime("-10 days")), "action" => "Changed password"),
-            // )
-        ];
+        // Pastikan hanya admin yang dapat mengakses
 
-        $data['content'] = $parser->setData($data)->render('components/profile');
-        return view('user/profile', $data);
+        helper(['auth']);
+        if (!in_groups('admin')) {
+            return redirect()->to('/');
+        }
     }
 
     public function index()
     {
-        $params = new DataParamsUser([
-            'search' => $this->request->getGet('search'),
-            'role' => $this->request->getGet('role'),
-            'status' => $this->request->getGet('status'),
-            'sort' => $this->request->getGet('sort'),
-            'order' => $this->request->getGet('order'),
-            'page_users' => $this->request->getGet('page_users'),
-            'perPage' => $this->request->getGet('perPage')
-        ]);
-
-        $result = $this->userModel->getFilteredUsers($params);
-
         $data = [
-            'users' => $result['users'],
-            'pager' => $result['pager'],
-            'total' => $result['total'],
-            'params' => $params,
-            'statuses' => $this->userModel->getAllStatuses(),
-            'roles' => $this->userModel->getAllRoles(),
-            'baseUrl' => base_url('admin/users')
+            'title' => 'User Management',
+            'users' => $this->userModel->findAll()
         ];
-        $this->renderer->setData($data);
 
-        // Warming cache -> Memperbarui cache ketika hampir kadaluarsa
-        $cacheKey = 'view_' . str_replace('/', '_', $this->request->getUri()->getPath());
-        $cacheDuration = 900;
-
-        // Cek apakah cache masih ada
-        // $data = cache()->get($cacheKey);
-
-        // if ($data) {
-        //     $metadata = cache()->getMetadata($cacheKey);
-        //     // ttl = masa berlaku cache
-        //     $ttl = $metadata['ttl'] ?? 0;
-
-        //     // Jika cache akan kedaluwarsa dalam 1 menit, perbarui cache
-        //     if ($ttl < 60) {
-        //         cache()->save($cacheKey, $this->renderer->render('user/user_list'), $cacheDuration);
-        //     }
-
-        //     return $data;
-        // }
-
-        // Jika cache tidak ada, buat cache baru
-        // return cache()->remember($cacheKey, $cacheDuration, function () {
-        //     return $this->renderer->render('user/user_list');
-        // });
-
-        return $this->renderer->render('user/user_list');
-    }
-
-    public function detail($id)
-    {
-        $data['user'] = $this->userModel->find($id);
-        return view('user/user_detail', $data);
-    }
-
-    public function addUserForm(): string
-    {
-        return view('user/add_user');
+        return view('users/index', $data);
     }
 
     public function create()
     {
-        $data = $this->request->getPost();
+        $data = [
+            'title' => 'Add New User',
+            'groups' => $this->groupModel->findAll(),
+            'validation' => \Config\Services::validation()
+        ];
 
-        if (! $this->userModel->validate($data)) {
-            return redirect()->back()
-                ->with('errors', $this->userModel->errors())
-                ->withInput();
-        }
-
-        $user = new User($data);
-        $this->userModel->save($user);
-
-        // clear cache
-        $cacheKey = 'view__index.php_admin_users';
-        cache()->delete($cacheKey);
-
-        return redirect()->to(route_to('users'))->with('success', 'Users added successfully');
+        return view('users/create', $data);
     }
 
-    public function updateUserForm($id): string
+    public function edit($id)
     {
-        $data['user'] = $this->userModel->find($id);
-        return view('user/edit_user', $data);
+        $data = [
+            'title' => 'Edit User',
+            'user' => $this->userModel->find($id),
+            'groups' => $this->groupModel->findAll(),
+            'userGroups' => $this->groupModel->getGroupsForUser($id),
+            'validation' => \Config\Services::validation()
+        ];
+
+        if (empty($data['user'])) {
+            return redirect()->to('admin/users')->with('error', 'User tidak ditemukan');
+        }
+
+        return view('users/edit', $data);
+    }
+    public function store()
+    {
+        $user = new \Myth\Auth\Entities\User();
+        $user->username = $this->request->getVar('username');
+        $user->email = $this->request->getVar('email');
+        $user->password = $this->request->getVar('password');
+        $user->active = 1;
+
+        $this->userModel->save($user);
+
+        $newUser = $this->userModel->where('email', $user->email)->first();
+        $userId = $newUser->id;
+
+        $groupId = $this->request->getVar('group');
+        $this->groupModel->addUserToGroup($userId, $groupId);
+
+        return redirect()->to('admin/users')->with('message', 'User berhasil ditambahkan');
     }
 
     public function update($id)
     {
-        $data = $this->request->getPost();
-
-        // Ganti `{id}` di aturan validasi dengan ID yang sedang diproses
-        $rules = $this->userModel->validationRules;
-        $messages = $this->userModel->getValidationMessages();
-        foreach ($rules as &$rule) {
-            $rule = str_replace('{id}', $id, $rule);
-        }
-
-        // Jalankan validasi
-        if (!$this->validate($rules, $messages)) {
-            return redirect()->back()
-                ->with('errors', $this->validator->getErrors())
-                ->withInput();
-        }
-
         $user = $this->userModel->find($id);
-
-        $user->fill($data);
-
-        if ($this->userModel->save($user)) {
-            session()->setFlashdata('success', 'User berhasil diupdate');
-            // delete cache at folder writable folder cache
-
-            // clear cache
-            $cacheKey = 'view__index.php_admin_users';
-            cache()->delete($cacheKey);
-
-            return redirect()->to('admin/users')->with('success', 'Users updated successfully');
+        if (!$user) {
+            return redirect()->to('/users')->with('error', 'User tidak ditemukan');
         }
 
-        // echo $this->userModel->errors();
 
-        return redirect()->back()
-            ->with('errors', $this->userModel->errors())
-            ->withInput();
+        // Validasi input berdasarkan aturan yang diperbarui
+
+        $newUsername = $this->request->getVar('username');
+        $newEmail = $this->request->getVar('email');
+        $password = $this->request->getVar('password');
+        $passConfirm = $this->request->getVar('pass_confirm');
+
+        // Cek password jika diisi
+        if (!empty($password) && $password !== $passConfirm) {
+            return redirect()->back()->withInput()->with('error', 'Password dan konfirmasi tidak sama');
+        }
+
+        // Persiapkan data update
+        $user->username = $newUsername;
+        $user->username = $newUsername;
+        $user->email    = $newEmail;
+        $user->active = $this->request->getVar('status') ? 1 : 0;
+
+        // Update password jika diisi
+        if (!empty($password)) {
+            $data['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
+        }
+
+        // Simpan data
+        if (!$this->userModel->save($user)) {
+            return redirect()->back()->with('errors', $this->userModel->errors())->withInput();
+        }
+
+        return redirect()->to('admin/users')->with('message', 'User berhasil diupdate');
     }
+
+
+
 
     public function delete($id)
     {
+        $user = $this->userModel->find($id);
+
+        if (empty($user)) {
+            return redirect()->to('/users')->with('error', 'User tidak ditemukan');
+        }
+
         $this->userModel->delete($id);
 
-        // clear cache
-        $cacheKey = 'view__index.php_admin_users';
-        cache()->delete($cacheKey);
-
-        return redirect()->to('admin/users')->with('success', 'Users deleted successfully');
+        return redirect()->to('admin/users')->with('message', 'User berhasil dihapus');
     }
 }

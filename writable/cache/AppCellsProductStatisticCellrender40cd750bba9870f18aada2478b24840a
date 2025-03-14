@@ -1,4 +1,4 @@
-a:3:{s:4:"time";i:1740715213;s:3:"ttl";i:3600;s:4:"data";s:6774:"<!-- DEBUG-VIEW START 6 APPPATH\Views\product\product_statistic.php -->
+a:3:{s:4:"time";i:1740761832;s:3:"ttl";i:3600;s:4:"data";s:6884:"<!-- DEBUG-VIEW START 6 APPPATH\Views\product\product_statistic.php -->
 <!-- DEBUG-VIEW START 5 APPPATH\Views\layouts\admin_layout.php -->
 <!-- DEBUG-VIEW START 4 APPPATH\Views\layouts\main.php -->
 <!DOCTYPE html>
@@ -172,6 +172,7 @@ a:3:{s:4:"time";i:1740715213;s:3:"ttl";i:3600;s:4:"data";s:6774:"<!-- DEBUG-VIEW
     <li class="nav-item"><a class="nav-link text-white" href="/admin/products">Products</a></li>
     <li class="nav-item"><a class="nav-link text-white" href="/products/statistics">Statistics</a></li>
     <li class="nav-item"><a class="nav-link text-white" href="/admin/users">Users</a></li>
+    <li class="nav-item"><a class="nav-link text-white" href="/admin/user/dashboard">User Dashboard</a></li>
 </ul>
 <!-- DEBUG-VIEW ENDED 1 APPPATH\Views\partials\sidebar.php -->
 </div>

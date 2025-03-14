@@ -1,0 +1,9 @@
+a:3:{s:4:"time";i:1741937317;s:3:"ttl";i:300;s:4:"data";s:407:"<div class="card-body">
+    <p><strong>Name:</strong> John Doe Uchiha</p>
+    <p><strong>Email:</strong> kirandz24@yopmail.com</p>
+    <p><strong>Registered at:</strong> 2025-03-14 07:23:06</p>
+    <p><strong>Status:</strong>
+                    <span class="badge bg-danger">active</span>
+            </p>
+    <p><strong>Role:</strong>
+        <span class="badge bg-info me-1">customer</span></div>";}

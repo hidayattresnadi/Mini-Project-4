@@ -11,7 +11,7 @@ class DataParamsUser
     public $role = '';
     public $sort = 'id';
     public $order = 'asc';
-    public $page_users = 1;
+    public $page_customers = 1;
     public $perPage = 2;
 
     public function __construct(array $params = [])
@@ -21,7 +21,7 @@ class DataParamsUser
         $this->status = $params['status'];
         $this->sort = $params['sort'] ?? 'id';
         $this->order = $params['order'] ?? 'asc';
-        $this->page_users = (int)($params['page_users'] ?? 1);
+        $this->page_customers = (int)($params['page_customers'] ?? 1);
         $this->perPage = (int)($params['perPage'] ?? 2);
     }
 
@@ -33,7 +33,7 @@ class DataParamsUser
             'status' => $this->status,
             'sort' => $this->sort,
             'order' => $this->order,
-            'page_users' => $this->page_users,
+            'page_customers' => $this->page_customers,
             'perPage' => $this->perPage
         ];
     }

@@ -7,9 +7,21 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item"><a class="nav-link" href="<?= route_to('products') ?>">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="<?= route_to('profile') ?>">Profile</a></li>
+                <?php if (logged_in()) : ?>
+                    <li class="nav-item"><a class="nav-link" href="<?= route_to('profile') ?>">Profile</a></li>
+                <?php endif; ?>
+
             </ul>
-            <span class="navbar-text">Welcome, John Doe</span>
+            <?php if (logged_in()) : ?>
+                <span class="navbar-text">Welcome, <?= user()->username; ?></span>
+            <?php endif; ?>
         </div>
+        <li>
+            <?php if (logged_in()) : ?>
+                <a class="navbar-text text-decoration-none" href="/logout">Logout</a>
+            <?php else : ?>
+                <a class="navbar-text text-decoration-none" href="/login">Login</a>
+            <?php endif; ?>
+        </li>
     </div>
 </nav>
