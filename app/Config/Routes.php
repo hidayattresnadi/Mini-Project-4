@@ -53,6 +53,8 @@ $routes->group('admin/products', ['filter' => 'role:administrator,product manage
     $routes->put('(:num)', [ProductController::class, 'update']);
     $routes->delete('(:num)',  [ProductController::class, 'delete']);
     $routes->get('dashboard', 'AdminController::showDashboard', ['as' => 'dashboard']);
+    $routes->get('(:num)/upload_product_image',  [ProductController::class, 'uploadProductImageForm']);
+    $routes->post('(:num)/upload_product_image',  [ProductController::class, 'uploadProductImage']);
 });
 
 $routes->get('/addUserToGroupForm', 'Auth::addUserToGroupForm', ['filter' => 'role:administrator']);
@@ -65,3 +67,5 @@ $routes->group('', ['namespace' => 'App\Controllers'], function ($routes) {
     $routes->get('register', 'Auth::register', ['as' => 'register']);
     $routes->post('register', 'Auth::attemptRegister');
 });
+
+$routes->get('products/(:num)', [ProductController::class, 'show']);

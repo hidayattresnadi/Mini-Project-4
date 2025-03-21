@@ -126,10 +126,41 @@ class ProductModel extends Model
             ->groupBy('products.id, categories.name');
     }
 
+    public function productWithCategoryAndThumbnail()
+    {
+        return $this->select('
+        products.*, 
+        categories.name as category, 
+        (SELECT image_path 
+         FROM product_images 
+         WHERE product_images.product_id = products.id 
+         AND product_images.image_path LIKE "%/thumbnail/%"
+         LIMIT 1) as thumbnail
+    ')
+            ->join('categories', 'categories.id = products.category_id')
+            ->groupBy('products.id, categories.name');
+    }
+
+    public function productWithCategoryAndMediumImage()
+    {
+        return $this->select('
+        products.*, 
+        categories.name as category, 
+        (SELECT image_path 
+         FROM product_images 
+         WHERE product_images.product_id = products.id 
+         AND product_images.image_path LIKE "%/medium/%"
+         LIMIT 1) as medium
+    ')
+            ->join('categories', 'categories.id = products.category_id')
+            ->groupBy('products.id, categories.name');
+    }
+
 
     public function getFilteredProducts(DataParams $params, bool $isAdmin)
     {
-        $query = $this->withCategoryAndImages();
+
+        $query = $isAdmin ? $this->withCategoryAndImages() : $this->productWithCategoryAndThumbnail();
         if (!empty($params->search)) {
             if ($isAdmin) {
                 $query->groupStart()

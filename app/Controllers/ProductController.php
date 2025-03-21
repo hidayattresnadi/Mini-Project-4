@@ -5,19 +5,28 @@ namespace App\Controllers;
 use App\Entities\Product;
 use App\Libraries\DataParams;
 use App\Models\CategoryModel;
+use App\Models\ProductImageModel;
 use App\Models\ProductModel;
+use CodeIgniter\Files\File;
+use CodeIgniter\I18n\Time;
+use Myth\Auth\Models\GroupModel;
+use Myth\Auth\Models\UserModel;
 
 class ProductController extends BaseController
 {
     protected $renderer;
     private ProductModel $productModel;
     private CategoryModel $categoryModel;
+    private ProductImageModel $productImageModel;
+    private UserModel $userModel;
 
     public function __construct()
     {
         $this->renderer = service('renderer');
         $this->productModel = new ProductModel();
         $this->categoryModel = new CategoryModel();
+        $this->productImageModel = new ProductImageModel();
+        $this->userModel = new UserModel();
     }
     public function index(): string
     {
@@ -52,6 +61,7 @@ class ProductController extends BaseController
             $product->isOnSaleSpan = view_cell('IsOnSaleProductCell', ['isOnSale' => $product->isSale()]);
             $product->stockStyling = view_cell('StockSpanProductCell', ['stock' => $product->stock]);
             $product->buyButton = view_cell('BuyButtonProductCell', ['stock' => $product->stock]);
+            $product->thumbnail_src = $data['thumbnail'] = !empty($product->thumbnail) ? base_url($product->thumbnail) : base_url('uploads/default-thumbnail.jpg');
 
             return $product;
         }, $data['products']);
@@ -184,18 +194,21 @@ class ProductController extends BaseController
 
     public function show($id)
     {
-        $data['product'] = $this->productModel->withCategory()->find($id);
+        $data['product'] = $this->productModel->productWithCategoryAndMediumImage()->find($id);
         return view('product/product_detail', $data);
     }
 
     public function new(): string
     {
+        helper('form');
         $data['categories'] = $this->categoryModel->findAll();
         return view('product/add_product', $data);
     }
 
     public function create()
     {
+        helper('form');
+        $email = service('email');
         $product = new Product($this->request->getPost());
         $product->is_new = $this->request->getPost('is_new') ?? false;
         $product->is_sale = $this->request->getPost('is_sale') ?? false;
@@ -206,6 +219,8 @@ class ProductController extends BaseController
                 ->with('errors', $this->productModel->errors())
                 ->withInput();
         }
+
+        $insertedId = $this->productModel->insertID();
 
         // delete cache at folder writable folder cache
 
@@ -218,7 +233,42 @@ class ProductController extends BaseController
             }
         }
 
-        return redirect()->to('admin/products')->with('message', 'Products added successfully');
+        $userId = user_id();
+        $user = $this->userModel->find($userId);
+        $email->setFrom('online@shopping.com', 'Online Shopping App');
+        $email->setTo($user->email);
+
+        $ccList = $this->getEmailsByRoles(['administrator', 'product manager'], $user->email);
+        $email->setCC($ccList);
+
+        $email->setSubject('New Product has been added');
+
+        $data['product'] = $product;
+        $time = Time::now('Asia/Jakarta');
+        $formattedDate = $time->toLocalizedString('EEEE, dd MMMM yyyy');
+
+        $listFiles = $this->uploadProductImageWithListFiles($insertedId);
+        $email->attach($listFiles['thumbnailPathRelative'], 'inline', 'product_thumbnail.png');
+        $data = [
+            'product' => $product,
+            'product_url' => site_url('products/' . $insertedId),
+            'category' => $this->categoryModel->find($product->category_id),
+            'registration_date' => $formattedDate,
+            'product_id' => $insertedId,
+            'thumbnail' => "cid:product_thumbnail.png"
+        ];
+
+        $message = view('email/add_product', $data);
+        $email->setMessage($message);
+
+
+        if ($email->send()) {
+            return redirect()->to('admin/products')->with('message', 'Products added successfully');
+        } else {
+            $data = ['error' => $email->printDebugger()];
+            return redirect()->back()
+                ->with('errors', $data);
+        }
     }
 
     public function edit($id): string
@@ -272,5 +322,182 @@ class ProductController extends BaseController
             }
         }
         return redirect()->to('admin/products')->with('message', 'Products deleted successfully');
+    }
+
+    public function uploadProductImageForm($id)
+    {
+        helper('form');
+        $data['product_id'] = $id;
+        return view('product/upload_product_image', $data);
+    }
+
+    public function uploadProductImage($id)
+    {
+        $listFiles = $this->uploadProductImageWithListFiles($id);
+
+        $data = ['uploaded_fileinfo' => new File($listFiles['filePath'])];
+        $data['baseUrl'] = 'admin/products/upload_product_image';
+        return view('upload_success', $data);
+    }
+
+    public function uploadProductImageWithListFiles($id)
+    {
+        helper('form');
+        $userfile = $this->request->getFile('userfile');
+
+        $validationRules = [
+            'userfile' => [
+                'label' => 'Gambar',
+                'rules' => [
+                    'uploaded[userfile]',
+                    'is_image[userfile]',
+                    'mime_in[userfile,image/jpeg,image/jpg,image/png,image/webp]',
+                    'max_size[userfile,5*1024]',
+                    'min_dims[userfile,600,600]'
+                ],
+                'errors' => [
+                    'uploaded' => 'Please choose file to upload',
+                    'is_image' => 'File should be image',
+                    'mime_in' => 'File format should be JPG, PNG, or WebP',
+                    'max_size' => 'File size is not more than 5 MB',
+                    'min_dims' => 'File dimension is not less than 600x600'
+                ]
+            ]
+        ];
+
+        if (!$this->validate($validationRules)) {
+            return redirect()->back()
+                ->with('errors', $this->validator->getErrors());
+        }
+
+        $newName = $userfile->getRandomName();
+        $uploadPath = FCPATH . 'uploads/product_' . $id;
+
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
+        $userfile->move($uploadPath, $newName);
+        $filepath = $uploadPath . '/' . $newName;
+
+        $listFiles = $this->createImageVersions($filepath, $newName, $uploadPath, $id);
+        return $listFiles;
+    }
+
+    private function createImageVersions($filePath, $fileName, $uploadPath, $productId)
+    {
+        $mediumPathRelative = $this->getMediumPathRelative($filePath, $fileName, $uploadPath, $productId);
+        $thumbnailPathRelative = $this->getThumbnailPathRelative($filePath, $fileName, $uploadPath, $productId);
+        $originalPathRelative = $this->getOriginalPathRelative($filePath, $productId);
+        $filePathRelative = [
+            'mediumPathRelative' => $mediumPathRelative,
+            'thumbnailPathRelative' => $thumbnailPathRelative,
+            'originalPathRelative' => $originalPathRelative,
+            'filepath' => $filePath
+        ];
+        return $filePathRelative;
+    }
+
+    protected function getEmailsByRoles(array $roles, $currentUserEmail)
+    {
+        $groupModel = new GroupModel();
+        $emails = [];
+
+        foreach ($roles as $role) {
+            $group = $groupModel->where('name', $role)->first();
+            $users = $groupModel->getUsersForGroup($group->id);
+            foreach ($users as $user) {
+                if ($currentUserEmail != $user['email']) {
+                    $emails[] = $user['email'];
+                }
+            }
+        }
+        $uniqueEmails = array_unique($emails);
+        return array_values($uniqueEmails);
+    }
+
+    private function getThumbnailPathRelative($filePath, $fileName, $uploadPath, $productId)
+    {
+        $image = service('image');
+        $thumbnailPath = $uploadPath . '/thumbnail/';
+        $thumbnailPathAbsolute = $thumbnailPath . $fileName;
+
+        if (!is_dir($thumbnailPath)) {
+            mkdir($thumbnailPath, 0777, true);
+        }
+
+        $image->withFile($filePath)
+            ->fit(150, 150, 'center')
+            ->save($thumbnailPathAbsolute);
+
+        $thumbnailPathRelative = str_replace(FCPATH, '', $thumbnailPathAbsolute);
+
+        $imageThumbnailData = [
+            'product_id' => $productId,
+            'image_path' => $thumbnailPathRelative,
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        $this->productImageModel->save($imageThumbnailData);
+
+        return $thumbnailPathRelative;
+    }
+
+    public function getMediumPathRelative($filePath, $fileName, $uploadPath, $productId)
+    {
+        $image = service('image');
+        $mediumPath = $uploadPath . '/medium/';
+
+        if (!is_dir($mediumPath)) {
+            mkdir($mediumPath, 0777, true);
+        }
+        $mediumPathAbsolute = $mediumPath . $fileName;
+
+        $image->withFile($filePath)
+            ->text('Copyright 2017 My Photo Co', [
+                'color'      => '#fff',
+                'opacity'    => 0.5,
+                'withShadow' => true,
+                'hAlign'     => 'center',
+                'vAlign'     => 'bottom',
+                'fontSize'   => 20,
+            ])
+            ->resize(500, 500, true, 'auto')
+            ->save($mediumPathAbsolute);
+
+        $mediumPathRelative = str_replace(FCPATH, '', $mediumPathAbsolute);
+
+        $imageMediumData = [
+            'product_id' => $productId,
+            'image_path' => $mediumPathRelative,
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        $this->productImageModel->save($imageMediumData);
+
+        return $mediumPathRelative;
+    }
+
+    public function getOriginalPathRelative($filePath, $productId)
+    {
+        $image = service('image');
+        $image->withFile($filePath)
+            ->text('Copyright 2017 My Photo Co', [
+                'color'      => '#fff',
+                'opacity'    => 0.5,
+                'withShadow' => true,
+                'hAlign'     => 'center',
+                'vAlign'     => 'bottom',
+                'fontSize'   => 20,
+            ])
+            ->save($filePath, 80);
+
+        $filePathRelative = str_replace(FCPATH, '', $filePath);
+
+        $imageOriginalData = [
+            'product_id' => $productId,
+            'image_path' => $filePathRelative,
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        $this->productImageModel->save($imageOriginalData);
+
+        return $filePathRelative;
     }
 }

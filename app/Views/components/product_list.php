@@ -22,6 +22,9 @@
         <div class="col-md-4">
             <div class="card mb-4">
                 <div class="card-body">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <img src="{thumbnail_src}" alt="Product Thumbnail" style="max-width: 150px; border-radius: 5px; border: 1px solid #ddd;">
+                    </div>
                     <h5 class="card-title">{name}</h5>
                     <h6 class="text-muted">{category}</h6>
                     <p class="card-text">

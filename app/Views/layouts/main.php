@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="<?= base_url('assets/js/pristine.js') ?>"></script>
+    <?= $this->renderSection('script') ?>
     <script>
         let pristine;
         window.onload = function() {

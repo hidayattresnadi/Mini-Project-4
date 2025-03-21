@@ -8,6 +8,9 @@
             <h4 class="mb-0"><i class="bi bi-box"></i> Product Detail</h4>
         </div>
         <div class="card-body">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <img src="<?= base_url($product->medium) ?>" alt="Product Thumbnail" style="max-width: 500px; border-radius: 5px; border: 1px solid #ddd;">
+            </div>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item">
                     <strong><i class="bi bi-tag"></i> Name:</strong> <?= esc($product->name) ?>

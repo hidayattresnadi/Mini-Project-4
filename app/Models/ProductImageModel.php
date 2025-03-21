@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class ProductImageModel extends Model
 {
-    protected $table            = 'productimages';
+    protected $table            = 'product_images';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = \App\Entities\ProductImage::class;
@@ -21,7 +21,7 @@ class ProductImageModel extends Model
     protected array $castHandlers = [];
 
     // Dates
-    protected $useTimestamps = true;
+    protected $useTimestamps = false;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
 
