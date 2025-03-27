@@ -91,6 +91,10 @@ class ReportController extends BaseController
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
+        $sheet->getStyle('D6:D' . ($row - 1))
+            ->getNumberFormat()
+            ->setFormatCode('"Rp" #,##0.00');
+
         // Buat border untuk seluruh tabel
         $styleArray = [
             'borders' => [
@@ -101,7 +105,6 @@ class ReportController extends BaseController
         ];
 
         $sheet->getStyle('A5:F' . ($row - 1))->applyFromArray($styleArray);
-
 
 
         $filename = 'Product_by_Category_Report_' . date('Y-m-d-His') . '.xlsx';
