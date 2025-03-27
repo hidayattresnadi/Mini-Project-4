@@ -2,6 +2,7 @@
 
 use App\Controllers\ProductController;
 use App\Controllers\CustomerController;
+use App\Controllers\DashboardController;
 use CodeIgniter\Router\RouteCollection;
 
 /**
@@ -52,7 +53,7 @@ $routes->group('admin/products', ['filter' => 'role:administrator,product manage
     $routes->get('(:num)/edit', [ProductController::class, 'edit']);
     $routes->put('(:num)', [ProductController::class, 'update']);
     $routes->delete('(:num)',  [ProductController::class, 'delete']);
-    $routes->get('dashboard', 'AdminController::showDashboard', ['as' => 'dashboard']);
+    $routes->get('dashboard', 'DashboardController::index', ['as' => 'dashboard']);
     $routes->get('(:num)/upload_product_image',  [ProductController::class, 'uploadProductImageForm']);
     $routes->post('(:num)/upload_product_image',  [ProductController::class, 'uploadProductImage']);
 });
@@ -69,3 +70,15 @@ $routes->group('', ['namespace' => 'App\Controllers'], function ($routes) {
 });
 
 $routes->get('products/(:num)', [ProductController::class, 'show']);
+
+
+
+$routes->group('', ['filter' => 'role:administrator'], function ($routes) {
+    $routes->get('report/users', 'ReportController::userListReportForm');
+    $routes->post('report/users', 'ReportController::userListReportPdf');
+});
+
+$routes->group('', ['filter' => 'role:product manager'], function ($routes) {
+    $routes->get('report/products', 'ReportController::productbyCategoryForm');
+    $routes->get('report/productsExcel', 'ReportController::productbyCategoryExcel');
+});

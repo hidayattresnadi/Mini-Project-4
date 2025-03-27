@@ -132,6 +132,7 @@
             document.getElementById("mainContent").classList.toggle("shifted");
         });
     </script>
+    <?= $this->renderSection('scriptChart') ?>
 
 </body>
 

@@ -234,4 +234,45 @@ class ProductModel extends Model
         $ranges["Above $max"] = [$max, null];
         return $ranges;
     }
+
+    public function getAllProductsByCategory()
+    {
+        return $this->select('online_shopping.categories.name as category,
+        COUNT(products.category_id) as total_products,
+        (COUNT(products.category_id) * 100.0 / (SELECT COUNT(*) FROM products)) as percentage')
+            ->join('online_shopping.categories', 'online_shopping.categories.id = products.category_id')
+            ->groupBy('online_shopping.categories.name')
+            ->findAll();
+    }
+
+    public function getTopFiveProducts()
+    {
+        return $this->select('online_shopping.categories.name as category,
+        count(products.category_id) as total_products')
+            ->join('online_shopping.categories', 'online_shopping.categories.id = products.category_id')
+            ->groupBy('online_shopping.categories.name')
+            ->orderBy('total_products', 'DESC')
+            ->limit(5)
+            ->findAll();
+    }
+
+    public function getProductGrowthMonth()
+    {
+        return $this->select('MONTH(created_at) as month, COUNT(id) as total_products')
+            ->where('YEAR(created_at)', date('Y'))
+            ->groupBy('MONTH(created_at)')
+            ->orderBy('MONTH(created_at)')
+            ->findAll();
+    }
+
+    public function getFilteredProductsbyCategory($search)
+    {
+        $query = $this->withCategory();
+        if (!empty($search)) {
+            $query->groupStart()
+                ->like("categories.name", $search)
+                ->groupEnd();
+        }
+        return $query->orderBy('products.name')->findAll();
+    }
 }

@@ -45,7 +45,7 @@ class CategoryModel extends Model
 
     public function getAllCategories()
     {
-        $categories = $this->select('name')->distinct()->findAll();
+        $categories = $this->select('name')->orderBy('name')->distinct()->findAll();
         return array_column($categories, 'name');
     }
 }
